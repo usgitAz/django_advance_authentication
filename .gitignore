@@ -1,0 +1,153 @@
+# ─────────────────────────────────────────────────────────────
+#  Django & Python Project — .gitignore (Professional & Clean)
+#  https://github.com/github/gitignore/blob/main/Python.gitignore
+#  https://github.com/github/gitignore/blob/main/Django.gitignore
+# ─────────────────────────────────────────────────────────────
+
+# ───────────────────────
+#  Python Virtual Environment
+# ───────────────────────
+venv/
+env/
+.venv/
+ENV/
+env*
+.venv*
+ENV*
+pip-wheel-metadata/
+__pypackages__/
+
+# ───────────────────────
+#  Environment Variables
+# ───────────────────────
+.env
+.env.local
+.env.*.local
+*.env
+# must exist in git for developers 
+!.env.example 
+
+# ───────────────────────
+#  Django Specific
+# ───────────────────────
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/ 
+staticfiles/
+*.pyc
+__pycache__/
+*.py[cod]
+*$py.class
+*.sqlite3
+*.sqlite3-journal
+
+
+# ───────────────────────
+#  Django Debug Toolbar
+# ───────────────────────
+django-debug-toolbar/
+
+# ───────────────────────
+#  Testing & Coverage
+# ───────────────────────
+htmlcov/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.pytest_cache/
+.tox/
+.coverage
+.coverage.*
+
+# ───────────────────────
+#  IDE & Editors
+# ───────────────────────
+# VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# PyCharm
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+[._]*.s[a-w][a-z]
+[._]s[a-w][a-z]
+*.un~
+Session.vim
+.netrwhist
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+.elc
+auto-save-list
+tramp
+.\#*
+
+# ───────────────────────
+#  Build & Packaging
+# ───────────────────────
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ───────────────────────
+#  Docker
+# ───────────────────────
+docker-compose.override.yml
+.docker/
+
+# ───────────────────────
+#  macOS
+# ───────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ───────────────────────
+#  Windows
+# ───────────────────────
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msm
+*.dll
+
+# ───────────────────────
+#  End of File
+# ───────────────────────
