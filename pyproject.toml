@@ -1,0 +1,32 @@
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+fix = true
+show-fixes = true
+exclude = [
+    ".git",
+    ".tox",
+    ".venv",
+    "__pycache__",
+    "venv",
+    "env",
+    "*.env",
+    "migrations",
+    "db.sqlite3",
+    "build",
+    "dist",
+    "*.pyc",
+]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "C4", "UP"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src", "config", "apps"]
+combine-as-imports = true
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*.py" = ["S101"]
+"src/config/settings/*.py" = ["F811"]
+"src/config/settings/__init__.py" = ["F403", "F811"]

@@ -75,6 +75,8 @@ coverage.xml
 !.vscode/launch.json
 !.vscode/extensions.json
 
+# ruff cache 
+.ruff_cache
 # PyCharm
 .idea/
 *.iws
