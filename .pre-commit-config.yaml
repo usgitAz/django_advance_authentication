@@ -1,6 +1,23 @@
+default_language_version:
+  python: python3.12
+
 repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-added-large-files # check big files
+        args: [--maxkb=500]
+      - id: check-toml # check toml files format
+      - id: check-yaml # check yaml files format
+        args: [--unsafe]
+      - id: check-json # checking json codes format
+      - id: trailing-whitespace # remove space end of lines
+      - id: end-of-file-fixer # add a empty line for all files
+      - id: mixed-line-ending # fix ending files (add \n for all line)
+        args: [--fix=lf]
+
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.6.8
+    rev: v0.14.3
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]

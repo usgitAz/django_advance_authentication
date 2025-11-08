@@ -24,8 +24,8 @@ __pypackages__/
 .env.local
 .env.*.local
 *.env
-# must exist in git for developers 
-!.env.example 
+# must exist in git for developers
+!.env.example
 
 # ───────────────────────
 #  Django Specific
@@ -34,7 +34,7 @@ __pypackages__/
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
-media/ 
+media/
 staticfiles/
 *.pyc
 __pycache__/
@@ -75,7 +75,7 @@ coverage.xml
 !.vscode/launch.json
 !.vscode/extensions.json
 
-# ruff cache 
+# ruff cache
 .ruff_cache
 # PyCharm
 .idea/
