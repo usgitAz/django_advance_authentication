@@ -24,6 +24,7 @@ __pypackages__/
 .env.local
 .env.*.local
 *.env
+*.env*
 # must exist in git for developers
 !.env.example
 

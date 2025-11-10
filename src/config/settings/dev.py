@@ -3,7 +3,6 @@ from .base import (
     BASE_DIR,
     DATABASES,
     DEBUG,
-    EMAIL_BACKEND,
 )
 
 DEBUG = True

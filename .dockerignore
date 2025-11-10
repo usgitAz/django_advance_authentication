@@ -1,0 +1,69 @@
+# ---- Python ----
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.py[cod]
+*$py.class
+
+# ---- Virtual environments ----
+venv/
+env/
+.venv/
+ENV/
+env*/
+.venv*/
+ENV*/
+pip-wheel-metadata/
+__pypackages__/
+
+# ---- Django ----
+*.log
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+static/
+*.sqlite3
+
+# ---- Build / Packaging ----
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ---- IDE / Editors ----
+.vscode/
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# ---- OS ----
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ---- Docker / Git ----
+.dockerignore
+docker-compose*.yml
+Dockerfile
+.git
+.gitignore
+
+# ---- Misc ----
+__MACOSX/
+*.bak
+*.swp
