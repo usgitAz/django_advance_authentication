@@ -1,0 +1,88 @@
+name: CI — Build, migrate & test with Docker Compose
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Cache pip wheel cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Create .env.prod from repository-safe values & secrets
+        env:
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+        run: |
+          cat > .env.prod <<'EOF'
+          DJANGO_ENV=prod
+          SECRET_KEY=${SECRET_KEY}
+          DEBUG=False
+          ALLOWED_HOSTS=*
+          DB_NAME=${DB_NAME}
+          DB_USER=${DB_USER}
+          DB_PASSWORD=${DB_PASSWORD}
+          DB_HOST=postgres
+          DB_PORT=5432
+          EOF
+          echo ".env.prod created (secrets come from repo secrets)."
+
+      - name: Build and start stack (prod compose)
+        run: |
+          docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+
+      - name: Wait for Postgres to be ready
+        run: |
+          for i in $(seq 1 30); do
+            if docker compose exec -T db pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-test_db} >/dev/null 2>&1; then
+              echo "Postgres is ready"; break
+            fi
+            echo "Waiting for Postgres... ($i/30)"; sleep 3
+          done
+
+      - name: Wait for web /health/ to return 200 (max ~3 minutes)
+        run: |
+          for i in $(seq 1 36); do
+            if docker compose exec -T web sh -c 'curl -fsS http://localhost:8000/health/ >/dev/null 2>&1'; then
+              echo "Web is healthy"; break
+            fi
+            echo "Waiting for web health... ($i/36)"; sleep 5
+          done
+
+      - name: Run migrations (in container)
+        run: |
+          docker compose exec -T web python manage.py migrate --noinput
+
+      - name: Run tests
+        run: |
+          docker compose exec -T web python manage.py test
+
+      - name: Save docker compose logs (if tests failed this helps)
+        if: failure()
+        run: |
+          docker compose logs --no-color > compose-logs.txt || true
+          echo "=== First lines of compose logs ==="
+          head -n 200 compose-logs.txt || true
+
+      - name: Tear down stack
+        if: always()
+        run: docker compose down -v --remove-orphans

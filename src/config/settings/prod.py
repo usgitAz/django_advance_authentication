@@ -1,14 +1,4 @@
-from .base import (
-    ALLOWED_HOSTS,
-    CSRF_COOKIE_SECURE,
-    DATABASES,
-    DEBUG,
-    SECURE_BROWSER_XSS_FILTER,
-    SECURE_CONTENT_TYPE_NOSNIFF,
-    SECURE_SSL_REDIRECT,
-    SESSION_COOKIE_SECURE,
-    config,
-)
+from .base import *
 
 # Security settings
 DEBUG = False

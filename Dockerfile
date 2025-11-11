@@ -24,6 +24,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy installed packages from builder
@@ -32,6 +33,7 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy source code
 COPY . .
+WORKDIR /app/src
 
 # Create non-root user
 RUN useradd -m appuser && chown -R appuser:appuser /app
@@ -40,7 +42,7 @@ USER appuser
 EXPOSE 8000
 CMD ["sh", "-c", "\
     if [ \"$DJANGO_ENV\" = \"dev\" ]; then \
-        python src/manage.py runserver 0.0.0.0:8000; \
+        python manage.py runserver 0.0.0.0:8000; \
     else \
         gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers $(nproc); \
     fi \
