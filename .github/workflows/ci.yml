@@ -11,6 +11,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 40
 
+    env:
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_NAME: ${{ secrets.DB_NAME }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -27,11 +33,6 @@ jobs:
             ${{ runner.os }}-pip-
 
       - name: Create .env.prod from repository-safe values & secrets
-        env:
-          SECRET_KEY: ${{ secrets.SECRET_KEY }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_NAME: ${{ secrets.DB_NAME }}
         run: |
           cat > .env.prod <<EOF
           DJANGO_ENV=prod
@@ -47,6 +48,13 @@ jobs:
           echo ".env.prod created:"
           cat .env.prod
 
+      # add for showing debug values
+      - name: Debug environment variables
+        run: |
+          echo "DB_USER is set: ${DB_USER:+yes}"
+          echo "DB_NAME is set: ${DB_NAME:+yes}"
+          echo "DB_PASSWORD is set: ${DB_PASSWORD:+yes}"
+
       - name: Build and start stack (prod compose)
         run: |
           docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
@@ -54,7 +62,7 @@ jobs:
       - name: Wait for Postgres to be ready
         run: |
           for i in $(seq 1 30); do
-            if docker compose exec -T db pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-test_db} >/dev/null 2>&1; then
+            if docker compose exec -T db pg_isready -U ${DB_USER} -d ${DB_NAME} >/dev/null 2>&1; then
               echo "Postgres is ready"; break
             fi
             echo "Waiting for Postgres... ($i/30)"; sleep 3
