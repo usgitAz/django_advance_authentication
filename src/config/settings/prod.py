@@ -1,10 +1,11 @@
 from .base import *
 
 # Security settings
-DEBUG = False
-ALLOWED_HOSTS = ["http://127.0.0.1:8000"]
+DEBUG = config("DEBUG", default=False, cast=bool)
+ALLOWED_HOSTS = config("ALLOWED_HOSTS", cast=Csv(), default="")
+SECRET_KEY = config("SECRET_KEY")
 
-SECURE_SSL_REDIRECT = True
+SECURE_SSL_REDIRECT = False  # for test
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 SECURE_BROWSER_XSS_FILTER = True
@@ -21,5 +22,4 @@ DATABASES["default"].update(
     }
 )
 
-# Email
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
