@@ -30,7 +30,8 @@ dev:
 	docker compose --env-file .env.dev -f docker-compose.yml -f docker-compose.dev.yml up --build -d
 
 test:
-	docker compose -f docker-compose.yml -f docker-compose.dev.yml exec web python src/manage.py test
+	docker compose --env-file .env.test -f docker-compose.test.yml up --build --abort-on-container-exit
+	docker compose -f docker-compose.test.yml down -v
 
 migrate:
 	docker compose -f docker-compose.yml -f docker-compose.dev.yml exec web python src/manage.py migrate

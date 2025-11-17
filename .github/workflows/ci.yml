@@ -1,4 +1,4 @@
-name: CI — Build, migrate & test with Docker Compose
+name: CI — Test & Coverage
 
 on:
   push:
@@ -7,9 +7,9 @@ on:
     branches: [ main ]
 
 jobs:
-  ci:
+  test:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 60
 
     env:
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
@@ -32,12 +32,13 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
-      - name: Create .env.prod from repository-safe values & secrets
+      # Create test environment file
+      - name: Create .env.test from secrets
         run: |
-          cat > .env.prod <<EOF
-          DJANGO_ENV=prod
+          cat > .env.test <<EOF
+          DJANGO_ENV=test
           SECRET_KEY=$SECRET_KEY
-          DEBUG=False
+          DEBUG=True
           ALLOWED_HOSTS=localhost,127.0.0.1
           DB_NAME=$DB_NAME
           DB_USER=$DB_USER
@@ -45,53 +46,44 @@ jobs:
           DB_HOST=db
           DB_PORT=5432
           EOF
-          echo ".env.prod created:"
-          cat .env.prod
 
-      # add for showing debug values
+        # add for showing debug values
       - name: Debug environment variables
         run: |
           echo "DB_USER is set: ${DB_USER:+yes}"
           echo "DB_NAME is set: ${DB_NAME:+yes}"
           echo "DB_PASSWORD is set: ${DB_PASSWORD:+yes}"
 
-      - name: Build and start stack (prod compose)
-        run: |
-          docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+      # Build and start test stack
+      - name: Build and start test stack
+        run: docker compose -f docker-compose.test.yml up -d --build
 
-      - name: Wait for Postgres to be ready
+      # Wait for Postgres to be ready
+      - name: Wait for Postgres
         run: |
           for i in $(seq 1 30); do
-            if docker compose exec -T db pg_isready -U ${DB_USER} -d ${DB_NAME} >/dev/null 2>&1; then
+            if docker compose -f docker-compose.test.yml exec -T db pg_isready -U $DB_USER -d $DB_NAME >/dev/null 2>&1; then
               echo "Postgres is ready"; break
             fi
-            echo "Waiting for Postgres... ($i/30)"; sleep 3
+            echo "Waiting for Postgres ($i/30)..."; sleep 3
           done
 
-      - name: Wait for web /health/ to return 200 (max ~3 minutes)
-        run: |
-          for i in $(seq 1 36); do
-            if docker compose exec -T web sh -c 'curl -fsS http://localhost:8000/health/ >/dev/null 2>&1'; then
-              echo "Web is healthy"; break
-            fi
-            echo "Waiting for web health... ($i/36)"; sleep 5
-          done
+      # Run migrations before tests
+      - name: Run migrations
+        run: docker compose -f docker-compose.test.yml exec -T web python manage.py migrate --noinput
 
-      - name: Run migrations (in container)
-        run: |
-          docker compose exec -T web python manage.py migrate --noinput
+      # Run pytest with coverage
+      - name: Run tests with pytest
+        run: docker compose -f docker-compose.test.yml exec -T web pytest --cov=/app/src --maxfail=1 --disable-warnings
 
-      - name: Run tests
-        run: |
-          docker compose exec -T web python manage.py test
-
-      - name: Save docker compose logs (if tests failed this helps)
+      # Save logs if tests fail
+      - name: Save logs if tests fail
         if: failure()
         run: |
-          docker compose logs --no-color > compose-logs.txt || true
-          echo "=== First lines of compose logs ==="
+          docker compose -f docker-compose.test.yml logs --no-color > compose-logs.txt || true
           head -n 200 compose-logs.txt || true
 
+      # Tear down stack
       - name: Tear down stack
         if: always()
-        run: docker compose down -v --remove-orphans
+        run: docker compose -f docker-compose.test.yml down -v

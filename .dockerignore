@@ -45,6 +45,8 @@ wheels/
 .installed.cfg
 *.egg
 MANIFEST
+.coverage
+htmlcov/
 
 # ---- IDE / Editors ----
 .vscode/
