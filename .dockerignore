@@ -58,10 +58,7 @@ MANIFEST
 Thumbs.db
 Desktop.ini
 
-# ---- Docker / Git ----
-.dockerignore
-docker-compose*.yml
-Dockerfile
+# ---- Git ----
 .git
 .gitignore
 

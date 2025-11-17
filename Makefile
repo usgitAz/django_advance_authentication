@@ -27,7 +27,7 @@ localtest:
 
 # ====== Docker Development ======
 dev:
-	docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d
+	docker compose --env-file .env.dev -f docker-compose.yml -f docker-compose.dev.yml up --build -d
 
 test:
 	docker compose -f docker-compose.yml -f docker-compose.dev.yml exec web python src/manage.py test
@@ -43,7 +43,7 @@ logs:
 
 # ====== Docker Production ======
 prod:
-	TAG=$(TAG) docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+	TAG=$(TAG) docker compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 
 # ====== Clean ======
 clean:

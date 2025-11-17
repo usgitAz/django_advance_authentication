@@ -40,10 +40,9 @@ RUN useradd -m appuser && chown -R appuser:appuser /app
 USER appuser
 
 EXPOSE 8000
-CMD ["sh", "-c", "\
-    if [ \"$DJANGO_ENV\" = \"dev\" ]; then \
-        python manage.py runserver 0.0.0.0:8000; \
-    else \
-        gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers $(nproc); \
-    fi \
-"]
+CMD ["gunicorn", "config.wsgi:application", \
+     "--bind", "0.0.0.0:8000", \
+     "--workers", "3", \
+     "--access-logfile", "-", \
+     "--error-logfile", "-", \
+     "--log-level", "info"]
