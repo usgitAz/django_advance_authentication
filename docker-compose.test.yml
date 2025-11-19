@@ -5,7 +5,13 @@ services:
       dockerfile: Dockerfile
     env_file:
       - .env.test
-    command: pytest --ds=config.settings.test --disable-warnings --maxfail=1
+    working_dir: /app
+    environment:
+      - PYTHONPATH=/app/src
+      - DJANGO_SETTINGS_MODULE=config.settings.test
+    # Keep the container running indefinitely so we can execute commands
+    # (like migrations and tests) via 'docker compose exec' in CI.
+    command: tail -f /dev/null
     depends_on:
       db:
         condition: service_healthy

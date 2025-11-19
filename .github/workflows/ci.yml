@@ -70,11 +70,11 @@ jobs:
 
       # Run migrations before tests
       - name: Run migrations
-        run: docker compose -f docker-compose.test.yml exec -T web python manage.py migrate --noinput
+        run: docker compose -f docker-compose.test.yml exec -T web python src/manage.py migrate --noinput
 
       # Run pytest with coverage
       - name: Run tests with pytest
-        run: docker compose -f docker-compose.test.yml exec -T web pytest --cov=/app/src --maxfail=1 --disable-warnings
+        run: docker compose -f docker-compose.test.yml exec -T web pytest
 
       # Save logs if tests fail
       - name: Save logs if tests fail
