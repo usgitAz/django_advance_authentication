@@ -1,17 +1,18 @@
-from decouple import config
+import os
 
 from .base import *
 
-DEBUG = False
+DEBUG = True
+SECRET_KEY = "django-insecure-test-key"
 ALLOWED_HOSTS = ["*"]
 
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": config("DB_NAME", default="test_db"),
-        "USER": config("DB_USER", default="test_user"),
-        "PASSWORD": config("DB_PASSWORD", default="test_pass"),
-        "HOST": config("DB_HOST", default="db"),
-        "PORT": config("DB_PORT", default="5432"),
+        "NAME": "test_db",
+        "USER": "test_user",
+        "PASSWORD": "test_pass",
+        "HOST": os.getenv("DB_HOST", "localhost"),
+        "PORT": 5432,
     }
 }

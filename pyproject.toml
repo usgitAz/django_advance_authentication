@@ -1,7 +1,7 @@
 [tool.ruff]
 line-length = 88
 target-version = "py312"
-fix = true
+fix = false
 show-fixes = true
 exclude = [
     ".git",
@@ -43,5 +43,7 @@ omit = [
     "src/config/**",
     "src/manage.py",
     "src/**/migrations/*",
-    "src/**/__init__.py"
+    "src/**/__init__.py",
+    "src/**/tests/*",
+    "src/**/tests/**",
 ]

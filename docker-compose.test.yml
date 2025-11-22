@@ -3,15 +3,18 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    env_file:
-      - .env.test
     working_dir: /app
     environment:
       - PYTHONPATH=/app/src
-      - DJANGO_SETTINGS_MODULE=config.settings.test
-    # Keep the container running indefinitely so we can execute commands
-    # (like migrations and tests) via 'docker compose exec' in CI.
-    command: tail -f /dev/null
+      - DJANGO_ENV=test
+      - SECRET_KEY=django-insecure-test-key
+      - DB_HOST=db
+      - DB_NAME=test_db
+      - DB_USER=test_user
+      - DB_PASSWORD=test_pass
+      - DB_PORT=5432
+    command: sh -c "python src/manage.py migrate --noinput && pytest"
+
     depends_on:
       db:
         condition: service_healthy
@@ -21,11 +24,9 @@ services:
   db:
     image: postgres:16-bookworm
     environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    ports:
-      - "5435:5432"
+      POSTGRES_DB: test_db
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_pass
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U test_user -d test_db"]
       interval: 5s

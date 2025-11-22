@@ -1,4 +1,4 @@
-name: CI — Test & Coverage
+name: CI — Build docker for Testing & Coverage
 
 on:
   push:
@@ -11,12 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
 
-    env:
-      SECRET_KEY: ${{ secrets.SECRET_KEY }}
-      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-      DB_USER: ${{ secrets.DB_USER }}
-      DB_NAME: ${{ secrets.DB_NAME }}
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,57 +18,8 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Cache pip wheel cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      # Create test environment file
-      - name: Create .env.test from secrets
-        run: |
-          cat > .env.test <<EOF
-          DJANGO_ENV=test
-          SECRET_KEY=$SECRET_KEY
-          DEBUG=True
-          ALLOWED_HOSTS=localhost,127.0.0.1
-          DB_NAME=$DB_NAME
-          DB_USER=$DB_USER
-          DB_PASSWORD=$DB_PASSWORD
-          DB_HOST=db
-          DB_PORT=5432
-          EOF
-
-        # add for showing debug values
-      - name: Debug environment variables
-        run: |
-          echo "DB_USER is set: ${DB_USER:+yes}"
-          echo "DB_NAME is set: ${DB_NAME:+yes}"
-          echo "DB_PASSWORD is set: ${DB_PASSWORD:+yes}"
-
-      # Build and start test stack
-      - name: Build and start test stack
-        run: docker compose -f docker-compose.test.yml up -d --build
-
-      # Wait for Postgres to be ready
-      - name: Wait for Postgres
-        run: |
-          for i in $(seq 1 30); do
-            if docker compose -f docker-compose.test.yml exec -T db pg_isready -U $DB_USER -d $DB_NAME >/dev/null 2>&1; then
-              echo "Postgres is ready"; break
-            fi
-            echo "Waiting for Postgres ($i/30)..."; sleep 3
-          done
-
-      # Run migrations before tests
-      - name: Run migrations
-        run: docker compose -f docker-compose.test.yml exec -T web python src/manage.py migrate --noinput
-
-      # Run pytest with coverage
-      - name: Run tests with pytest
-        run: docker compose -f docker-compose.test.yml exec -T web pytest
+      - name: Run Tests
+        run: docker compose -f docker-compose.test.yml up --build --abort-on-container-exit --exit-code-from web
 
       # Save logs if tests fail
       - name: Save logs if tests fail

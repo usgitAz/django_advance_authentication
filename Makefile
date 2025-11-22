@@ -23,14 +23,14 @@ local:
 	python3 src/manage.py runserver
 
 localtest:
-	python3 src/manage.py test
+	DJANGO_ENV=test pytest  --cov-report=xml
 
 # ====== Docker Development ======
 dev:
 	docker compose --env-file .env.dev -f docker-compose.yml -f docker-compose.dev.yml up --build -d
 
 test:
-	docker compose --env-file .env.test -f docker-compose.test.yml up --build --abort-on-container-exit
+	docker compose -f docker-compose.test.yml up --build --abort-on-container-exit
 	docker compose -f docker-compose.test.yml down -v
 
 migrate:
