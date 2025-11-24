@@ -10,6 +10,11 @@ services:
     networks:
       - backend
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
 
   db:
     image: postgres:16-bookworm

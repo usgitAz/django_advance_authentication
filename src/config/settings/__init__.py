@@ -14,6 +14,7 @@ from .base import *
 # If running pytest, always load test settings
 if "pytest" in sys.modules:
     from .test import *
+    from config.logging.testing import LOGGING
 else:
     ENV = config("DJANGO_ENV", default="dev").lower()
     if ENV not in ["dev", "test", "prod"]:
@@ -21,8 +22,12 @@ else:
         sys.exit(1)
 
     if ENV == "prod":
+        from config.logging.production import LOGGING
         from .prod import *
+
     elif ENV == "test":
+        from config.logging.testing import LOGGING
         from .test import *
     else:
+        from config.logging.development import LOGGING
         from .dev import *

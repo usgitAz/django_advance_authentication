@@ -19,6 +19,7 @@ __pypackages__/
 
 # ---- Django ----
 *.log
+logs/
 db.sqlite3
 db.sqlite3-journal
 src/db.sqlite3

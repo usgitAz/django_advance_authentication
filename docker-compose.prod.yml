@@ -4,12 +4,6 @@ services:
       - .env.prod
     ports:
       - "8000:8000"
-    command: >
-      gunicorn config.wsgi:application
-      --bind 0.0.0.0:8000
-      --workers 3
-      --access-logfile -
-      --error-logfile -
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
       interval: 30s

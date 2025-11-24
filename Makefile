@@ -34,10 +34,10 @@ test:
 	docker compose -f docker-compose.test.yml down -v
 
 migrate:
-	docker compose -f docker-compose.yml -f docker-compose.dev.yml exec web python src/manage.py migrate
+	docker compose -f docker-compose.yml -f docker-compose.dev.yml exec web python manage.py migrate
 
 superuser:
-	docker compose -f docker-compose.yml -f docker-compose.dev.yml exec web python src/manage.py createsuperuser
+	docker compose -f docker-compose.yml -f docker-compose.dev.yml exec web python manage.py createsuperuser
 
 logs:
 	docker compose -f docker-compose.yml -f docker-compose.dev.yml logs -f
