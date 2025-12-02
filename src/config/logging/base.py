@@ -37,7 +37,7 @@ LOGGING = {
         "console": {
             "class": "logging.StreamHandler",
             "formatter": "verbose",
-            "level": "DEBUG",
+            "level": "INFO",
         },
         "file_app": {
             "class": "logging.handlers.RotatingFileHandler",
