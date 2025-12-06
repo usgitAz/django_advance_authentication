@@ -23,7 +23,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("health/", health_check),
     # api view
-    path("api/v1/accounts/", include(accounts_api)),
+    path("api/v1/", include(accounts_api)),
     # jwt
     path("api/v1/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/v1/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),

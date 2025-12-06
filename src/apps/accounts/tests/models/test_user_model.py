@@ -6,7 +6,7 @@ from apps.accounts.models import User
 
 @pytest.mark.django_db
 def test_create_user(user_factory):
-    """Check creating normal user with factory"""
+    """Check creating normal user with factory."""
     new_user = user_factory(email="newuser@email.com")
     assert User.objects.count() == 1
     assert new_user.email == "newuser@email.com"
@@ -20,7 +20,7 @@ def test_create_user(user_factory):
 
 @pytest.mark.django_db
 def test_create_superuser(admin_user):
-    "Check ceating superuser with factory"
+    """Check ceating superuser with factory."""
     admin = admin_user
     assert admin.is_staff
     assert admin.is_superuser
@@ -29,7 +29,7 @@ def test_create_superuser(admin_user):
 
 @pytest.mark.django_db
 def test_full_name_property(user_factory):
-    """Test full name property in user model"""
+    """Test full name property in user model."""
     sample_user = user_factory(
         first_name="sample_firstname", last_name="sample_lastname"
     )
@@ -40,7 +40,7 @@ def test_full_name_property(user_factory):
 
 @pytest.mark.django_db
 def test_custom_manager_create_user():
-    """Check all fileds after creating normal user"""
+    """Check all fileds after creating normal user."""
     user = User.objects.create_user(
         email="normal@example.com",
         password="pass123",
@@ -55,7 +55,7 @@ def test_custom_manager_create_user():
 
 @pytest.mark.django_db
 def test_custom_manager_create_superuser():
-    """Check all fields after creating admin/superuser with manager"""
+    """Check all fields after creating admin/superuser with manager."""
     superuser = User.objects.create_superuser(
         email="admin@example.com",
         password="adminpass",
@@ -69,14 +69,14 @@ def test_custom_manager_create_superuser():
 
 @pytest.mark.django_db
 def test_create_user_manager_without_emails():
-    """Ensure get a value error when have a empty email field"""
+    """Ensure get a value error when have a empty email field."""
     with pytest.raises(ValueError):
         User.objects.create_user(email="", password="pass123")
 
 
 @pytest.mark.django_db
 def test_superuser_manager_rules():
-    """Check superuser rules (is_staff , is_super user)"""
+    """Check superuser rules (is_staff , is_super)."""
     with pytest.raises(ValueError):
         User.objects.create_superuser(
             email="superusermanager@mail.com", password="pass123", is_superuser=False
@@ -92,7 +92,7 @@ def test_superuser_manager_rules():
 
 @pytest.mark.django_db
 def test_create_batch_users(user_factory):
-    """Verify create_batch() creates the correct number of active users."""
+    """Verify create_batch() create the correct number of active users."""
     users = user_factory.create_batch(5)
     assert User.objects.count() == 5
     assert all(user.is_active for user in users)

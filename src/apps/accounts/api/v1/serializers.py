@@ -4,6 +4,8 @@ from apps.accounts.models.user import User
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
+    """Serialize user data with password validation and use save method to hashing password."""
+
     password = serializers.CharField(
         min_length=8, write_only=True, style={"input_type": "password"}
     )
@@ -25,6 +27,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "date_joined"]
 
     def validate(self, attrs):
+        """Check password, retype_password fields be the same."""
         if attrs.get("password") != attrs.get("retype_password"):
             raise serializers.ValidationError(
                 {
@@ -42,6 +45,8 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
 
 class UserUpdateSerializer(serializers.ModelSerializer):
+    """Only first_name and last_name can be change."""
+
     class Meta:
         model = User
         fields = ["first_name", "last_name"]
@@ -64,6 +69,12 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class ChangePasswordSerializer(serializers.Serializer):
+    """Change authenticated user password.
+
+    Check new_password & retype password be thes same &
+    Check that the new password is not the same as the previous password.
+    """
+
     old_password = serializers.CharField(min_length=8, write_only=True)
     new_password = serializers.CharField(min_length=8, write_only=True)
     retype_password = serializers.CharField(min_length=8, write_only=True)
@@ -81,3 +92,8 @@ class ChangePasswordSerializer(serializers.Serializer):
                 {"new_password": ["New password must be different"]}
             )
         return attrs
+
+    def update(self, instance, validated_data):
+        instance.set_password(validated_data["new_password"])
+        instance.save(update_fields=["password"])
+        return instance

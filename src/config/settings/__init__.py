@@ -1,8 +1,8 @@
-"""
-Select which settings to load.
+"""Select which settings to load.
+
 - dev  : development
 - test : pytest / testing
-- prod : production
+- prod : production.
 """
 
 import sys

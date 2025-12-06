@@ -9,10 +9,7 @@ from ..managers import CustomUserManager
 
 
 class User(AbstractBaseUser, PermissionsMixin):
-    """
-    Custom User Model utilizing Email as the unique identifier
-    and UUID as the primary key.
-    """
+    """Custom User Model utilizing Email as the unique identifier and UUID as the primary key."""
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(
