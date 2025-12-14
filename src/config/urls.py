@@ -6,10 +6,6 @@ from drf_spectacular.views import (
     SpectacularRedocView,
     SpectacularSwaggerView,
 )
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-)
 
 from apps.accounts.api.v1 import urls as accounts_api
 
@@ -24,9 +20,6 @@ urlpatterns = [
     path("health/", health_check),
     # api view
     path("api/v1/", include(accounts_api)),
-    # jwt
-    path("api/v1/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
-    path("api/v1/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     # drf specracular
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path(

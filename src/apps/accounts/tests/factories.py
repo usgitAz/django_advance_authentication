@@ -1,10 +1,12 @@
+from datetime import timedelta
 from uuid import uuid4
 
 import factory
 from django.utils import timezone
+from factory import fuzzy
 from factory.django import DjangoModelFactory
 
-from apps.accounts.models import User
+from apps.accounts.models import TokenBlacklist, User
 
 
 class UserFactory(DjangoModelFactory):
@@ -26,3 +28,15 @@ class UserFactory(DjangoModelFactory):
             password = extracted or "password1234"
             self.set_password(password)
             self.save()
+
+
+class TokenBlacklistFactory(DjangoModelFactory):
+    """Factory for TokenBlacklist model."""
+
+    class Meta:
+        model = TokenBlacklist
+
+    user = factory.SubFactory(UserFactory)
+    jti = factory.LazyFunction(lambda: uuid4().hex)
+    expires_at = factory.LazyFunction(lambda: timezone.now() + timedelta(days=30))
+    reason = fuzzy.FuzzyChoice(["logout", "rotation", "revocation", "password_change"])

@@ -1,9 +1,17 @@
+from unittest.mock import patch
+
 import pytest
+from django.contrib.auth import get_user_model
+from rest_framework import serializers
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.accounts.api.v1.serializers import (
     ChangePasswordSerializer,
+    LogoutSerializer,
     UserCreateSerializer,
 )
+
+User = get_user_model()
 
 
 @pytest.mark.django_db
@@ -74,3 +82,38 @@ class TestChangePasswordSerializer:
         assert serializer.is_valid()
         validated = serializer.validated_data
         assert validated["new_password"] == "newpass123"
+
+
+@pytest.mark.django_db
+def test_logout_serializer_full(user_factory):
+    """Test LogoutSerializer (valid, invalid, missing) refresh tokens."""
+    user = user_factory()
+    refresh = RefreshToken.for_user(user)
+    # Valid case
+    serializer = LogoutSerializer(data={"refresh": str(refresh)})
+    assert serializer.is_valid(), serializer.errors
+    serializer.save(user=user)
+    # Invalid token
+    serializer = LogoutSerializer(data={"refresh": "invalid-token"})
+    assert not serializer.is_valid()
+
+    # Missing refresh field
+    serializer = LogoutSerializer(data={})
+    assert not serializer.is_valid()
+
+
+@pytest.mark.django_db
+def test_logout_serializer_missing_jti_or_exp(user_factory):
+    """Test LogoutSerializer when token is missing jti or exp claim."""
+    user = user_factory()
+    refresh = RefreshToken.for_user(user)
+
+    serializer = LogoutSerializer(data={"refresh": str(refresh)})
+    assert serializer.is_valid()
+
+    # Mock the get method to return None
+    with patch.object(RefreshToken, "get", return_value=None):
+        with pytest.raises(serializers.ValidationError) as exc_info:
+            serializer.save(user=user)
+
+        assert "missing jti or exp claim" in str(exc_info.value)

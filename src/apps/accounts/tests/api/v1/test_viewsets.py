@@ -1,4 +1,9 @@
 import pytest
+from rest_framework import status
+from rest_framework.test import APIClient
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from apps.accounts.models.jwt_token_blacklist import TokenBlacklist
 
 
 @pytest.mark.django_db
@@ -113,3 +118,70 @@ class TestUserViewSet:
         }
         response = self.client.post(f"{self.url}change_password/", data)
         assert response.status_code == 400
+
+
+@pytest.mark.django_db
+class TestLogoutEndpoint:
+    """Test logout endpoint functionality."""
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.client = APIClient()
+        self.logout_url = "/api/v1/users/logout/"
+
+    def test_logout_success(self, user_factory):
+        user = user_factory()
+        refresh = RefreshToken.for_user(user)
+        self.client.force_authenticate(user=user)
+        response = self.client.post(
+            self.logout_url, {"refresh": str(refresh)}, format="json"
+        )
+        assert response.status_code == status.HTTP_200_OK
+        assert "detail" in response.data
+        assert "logged out" in response.data["detail"].lower()
+
+    def test_logout_blacklists_token(self, user_factory):
+        user = user_factory()
+        refresh = RefreshToken.for_user(user)
+        jti = refresh.get("jti")
+        self.client.force_authenticate(user=user)
+        assert not TokenBlacklist.is_blacklisted(jti)
+        self.client.post(self.logout_url, {"refresh": str(refresh)}, format="json")
+        assert TokenBlacklist.is_blacklisted(jti)
+
+    def test_logout_invalid_token(self, user_factory):
+        user = user_factory()
+        self.client.force_authenticate(user=user)
+        response = self.client.post(
+            self.logout_url, {"refresh": "invalid-token"}, format="json"
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "refresh" in response.data
+
+    def test_logout_already_blacklisted(self, user_factory):
+        user = user_factory()
+        refresh = RefreshToken.for_user(user)
+        self.client.force_authenticate(user=user)
+        response1 = self.client.post(
+            self.logout_url, {"refresh": str(refresh)}, format="json"
+        )
+        assert response1.status_code == status.HTTP_200_OK
+        response2 = self.client.post(
+            self.logout_url, {"refresh": str(refresh)}, format="json"
+        )
+        assert response2.status_code == status.HTTP_200_OK
+        assert "already blacklisted" in response2.data.get("detail", "").lower()
+
+    def test_logout_requires_authentication(self):
+        refresh = RefreshToken()
+        response = self.client.post(
+            self.logout_url, {"refresh": str(refresh)}, format="json"
+        )
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_logout_missing_refresh_field(self, user_factory):
+        user = user_factory()
+        self.client.force_authenticate(user=user)
+        response = self.client.post(self.logout_url, {}, format="json")
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "refresh" in response.data

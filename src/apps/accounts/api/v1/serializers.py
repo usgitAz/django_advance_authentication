@@ -1,5 +1,9 @@
 from rest_framework import serializers
+from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
 
+from apps.accounts.models.jwt_token_blacklist import TokenBlacklist
 from apps.accounts.models.user import User
 
 
@@ -97,3 +101,78 @@ class ChangePasswordSerializer(serializers.Serializer):
         instance.set_password(validated_data["new_password"])
         instance.save(update_fields=["password"])
         return instance
+
+
+class LogoutSerializer(serializers.Serializer):
+    """Logout serializer to blacklist refresh token.
+
+    Validates the refresh token and prepares it for blacklisting.
+    """
+
+    refresh = serializers.CharField(
+        write_only=True,
+        help_text="Refresh token to be blacklisted",
+    )
+
+    def validate_refresh(self, value):
+        """Validate the refresh token."""
+        try:
+            RefreshToken(value)
+        except Exception as e:
+            raise serializers.ValidationError(f"Invalid refresh token: {str(e)}") from e
+        return value
+
+    def save(self, user):
+        """Blacklist the refresh token."""
+        refresh_token = RefreshToken(self.validated_data["refresh"])
+
+        # Get token claims
+        jti = refresh_token.get("jti")
+        exp = refresh_token.get("exp")
+
+        if not jti or not exp:
+            raise serializers.ValidationError(
+                "Invalid token structure - missing jti or exp claim"
+            )
+
+        # Check if already blacklisted
+        if TokenBlacklist.is_blacklisted(jti):
+            return {"detail": "Token already blacklisted"}
+
+        # Blacklist the token
+        TokenBlacklist.blacklist_token(
+            user=user,
+            jti=jti,
+            exp_timestamp=exp,
+            reason="logout",
+        )
+
+        return {"detail": "Successfully logged out"}
+
+
+class CustomTokenRefreshSerializer(TokenRefreshSerializer):
+    def validate(self, attrs):
+        refresh_token_str = attrs["refresh"]
+        refresh = RefreshToken(refresh_token_str)
+
+        jti = refresh["jti"]
+        # check refresh token alreay in blacklist?
+        if TokenBlacklist.is_blacklisted(jti):
+            raise TokenError("Token has been revoked/blacklisted.")
+
+        # generate new token
+        data = super().validate(attrs)
+
+        # extract user_id from jwt payload
+        user_id = refresh.payload.get("user_id")
+        user = User.objects.filter(id=user_id).first()
+
+        # save old token in to blacklist
+        TokenBlacklist.blacklist_token(
+            user=user,
+            jti=jti,
+            exp_timestamp=refresh["exp"],
+            reason="rotation",
+        )
+
+        return data

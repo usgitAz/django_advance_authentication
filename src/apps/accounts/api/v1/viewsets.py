@@ -4,11 +4,14 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
+from rest_framework_simplejwt.views import TokenRefreshView
 
 from core.permissions import IsOwnerOrStaff
 
 from .serializers import (
     ChangePasswordSerializer,
+    CustomTokenRefreshSerializer,
+    LogoutSerializer,
     UserCreateSerializer,
     UserSerializer,
     UserUpdateSerializer,
@@ -68,3 +71,26 @@ class UserViewSet(ModelViewSet):
         return Response(
             {"detail": "Password changed successfully"}, status=status.HTTP_200_OK
         )
+
+    @action(
+        detail=False,
+        methods=["post"],
+        permission_classes=[IsAuthenticated],
+        serializer_class=LogoutSerializer,
+    )
+    def logout(self, request):
+        """Logout endpoint to blacklist the refresh token.
+
+        This prevents the token from being reused even if compromised.
+        Client should delete both access and refresh tokens from local storage.
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        response_data = serializer.save(user=request.user)
+
+        return Response(response_data, status=status.HTTP_200_OK)
+
+
+class CustomTokenRefreshView(TokenRefreshView):
+    serializer_class = CustomTokenRefreshSerializer
