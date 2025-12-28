@@ -1,6 +1,7 @@
 from datetime import timedelta
 from pathlib import Path
 
+import structlog
 from decouple import Csv, config
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -19,6 +20,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    # struct log
+    "django_structlog",
     # drf
     "rest_framework",
     "drf_spectacular",
@@ -27,6 +30,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "django_structlog.middlewares.RequestMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -97,6 +101,25 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "accounts.User"
 
+# StructLog Config
+structlog.configure(
+    processors=[
+        structlog.contextvars.merge_contextvars,
+        structlog.stdlib.filter_by_level,
+        structlog.stdlib.add_logger_name,
+        structlog.stdlib.add_log_level,
+        structlog.stdlib.PositionalArgumentsFormatter(),
+        structlog.processors.TimeStamper(fmt="iso"),
+        structlog.processors.StackInfoRenderer(),
+        structlog.processors.format_exc_info,
+        structlog.processors.UnicodeDecoder(),
+        structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
+    ],
+    logger_factory=structlog.stdlib.LoggerFactory(),
+    wrapper_class=structlog.stdlib.BoundLogger,
+    context_class=dict,
+    cache_logger_on_first_use=True,
+)
 # drf settigns
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
@@ -146,3 +169,9 @@ SPECTACULAR_SETTINGS = {
     ],
     "SCHEMA_SECURITY": [{"BearerAuth": []}],
 }
+
+SITE_URL = config("SITE_URL")
+
+# email verification
+VERIFICATION_EXPIRY_HOURS = 1
+DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL")

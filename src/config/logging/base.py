@@ -1,101 +1,58 @@
 from pathlib import Path
 
+import structlog
+
 BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
-
 LOG_DIR = BASE_DIR / "logs"
-LOG_DIR.mkdir(exist_ok=True)
+LOG_DIR.mkdir(parents=True, exist_ok=True)
 
-LOG_FORMAT = {
-    "fmt": "%(asctime)s | %(levelname)-8s | %(name)s | %(funcName)s:%(lineno)d | %(message)s",
-    "datefmt": "%Y-%m-%d %H:%M:%S",
-}
-
-JSON_LOG_FORMAT = (
-    '{"time": "%(asctime)s", "level": "%(levelname)s", "logger": "%(name)s", '
-    '"module": "%(module)s", "function": "%(funcName)s", "line": %(lineno)d, '
-    '"message": %(message)s, "process": %(process)d, "thread": %(thread)d}'
-)
-
-LOGGING = {
+# Simple base config - structlog handles formatting
+BASE_LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
-        "verbose": {
-            "format": LOG_FORMAT["fmt"],
-            "datefmt": LOG_FORMAT["datefmt"],
-        },
-        "json": {
-            "()": "pythonjsonlogger.jsonlogger.JsonFormatter",
-            "format": JSON_LOG_FORMAT,
-            "datefmt": "%Y-%m-%d %H:%M:%S",
-        },
-        "simple": {
-            "format": "%(levelname)s %(message)s",
+        "plain_console": {
+            "()": "structlog.stdlib.ProcessorFormatter",
+            "processor": structlog.dev.ConsoleRenderer(colors=False),
+            "foreign_pre_chain": [
+                structlog.contextvars.merge_contextvars,
+                structlog.stdlib.add_logger_name,
+                structlog.stdlib.add_log_level,
+                structlog.processors.TimeStamper(fmt="iso"),
+            ],
         },
     },
     "handlers": {
         "console": {
             "class": "logging.StreamHandler",
-            "formatter": "verbose",
-            "level": "INFO",
+            "formatter": "plain_console",
         },
-        "file_app": {
+        "file": {
             "class": "logging.handlers.RotatingFileHandler",
             "filename": LOG_DIR / "app.log",
-            "maxBytes": 10 * 1024 * 1024,  # 10MB
+            "maxBytes": 10 * 1024 * 1024,
             "backupCount": 5,
-            "formatter": "verbose",
-            "level": "INFO",
-        },
-        "file_error": {
-            "class": "logging.handlers.RotatingFileHandler",
-            "filename": LOG_DIR / "error.log",
-            "maxBytes": 10 * 1024 * 1024,
-            "backupCount": 10,
-            "formatter": "verbose",
-            "level": "WARNING",
-        },
-        "file_security": {
-            "class": "logging.handlers.RotatingFileHandler",
-            "filename": LOG_DIR / "security.log",
-            "maxBytes": 10 * 1024 * 1024,
-            "backupCount": 10,
-            "formatter": "verbose",
-            "level": "INFO",
-        },
-        "file_json": {
-            "class": "logging.handlers.RotatingFileHandler",
-            "filename": LOG_DIR / "app.json.log",
-            "maxBytes": 50 * 1024 * 1024,
-            "backupCount": 10,
-            "formatter": "json",
-            "level": "INFO",
+            "formatter": "plain_console",
         },
     },
+    "root": {
+        "handlers": ["console", "file"],
+        "level": "INFO",
+    },
     "loggers": {
-        "": {  # root logger
-            "handlers": ["console", "file_app", "file_error"],
-            "level": "INFO",
-            "propagate": False,
-        },
         "django": {
-            "handlers": ["console", "file_app"],
+            "handlers": ["console"],
             "level": "INFO",
             "propagate": False,
         },
         "django.request": {
-            "handlers": ["file_error"],
-            "level": "WARNING",
+            "handlers": ["console", "file"],
+            "level": "ERROR",
             "propagate": False,
         },
         "django.security": {
-            "handlers": ["file_security"],
-            "level": "INFO",
-            "propagate": False,
-        },
-        "apps": {
-            "handlers": ["console", "file_app"],
-            "level": "DEBUG",
+            "handlers": ["console", "file"],
+            "level": "WARNING",
             "propagate": False,
         },
     },

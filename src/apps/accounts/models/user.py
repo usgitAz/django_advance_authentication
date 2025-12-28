@@ -19,7 +19,10 @@ class User(AbstractBaseUser, PermissionsMixin):
             "Required. 254 characters or fewer. Must be a valid email address."
         ),
     )
-    first_name = models.CharField(_("first name"), max_length=150, blank=True)
+    email_verified = models.BooleanField(
+        _("verified email"), default=False, db_index=True
+    )
+    first_name = models.CharField(_("first name"), max_length=150, blank=False)
     last_name = models.CharField(_("last name"), max_length=150, blank=True)
 
     is_staff = models.BooleanField(

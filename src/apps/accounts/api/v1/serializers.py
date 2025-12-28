@@ -1,3 +1,4 @@
+import structlog
 from rest_framework import serializers
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
@@ -5,6 +6,9 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.accounts.models.jwt_token_blacklist import TokenBlacklist
 from apps.accounts.models.user import User
+from core.email import send_verification_email
+
+logger = structlog.getLogger(__name__)
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
@@ -44,7 +48,20 @@ class UserCreateSerializer(serializers.ModelSerializer):
     def create(self, validate_data):
         validate_data.pop("retype_password", None)
         password = validate_data.pop("password")
-        user = User.objects.create_user(password=password, **validate_data)
+        user = User.objects.create_user(
+            password=password, email_verified=False, **validate_data
+        )
+        # Send verification email (non-blocking failure)
+        try:
+            send_verification_email(user)
+        except Exception:
+            # Already logged in send_verification_email
+            logger.warning(
+                "user created but verification email failed",
+                user_id=user.pk,
+            )
+            # Don't fail user creation if email fails
+
         return user
 
 

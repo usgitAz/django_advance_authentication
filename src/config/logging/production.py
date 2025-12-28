@@ -1,15 +1,23 @@
-from .base import LOGGING
+import copy
 
-LOGGING["handlers"]["console"] = {
-    "class": "logging.StreamHandler",
-    "stream": "ext://sys.stdout",
-    "formatter": "json",
-    "level": "INFO",
+import structlog
+
+from .base import BASE_LOGGING
+
+LOGGING = copy.deepcopy(BASE_LOGGING)
+
+LOGGING["formatters"]["json_console"] = {
+    "()": "structlog.stdlib.ProcessorFormatter",
+    "processor": structlog.processors.JSONRenderer(),
+    "foreign_pre_chain": [
+        structlog.contextvars.merge_contextvars,
+        structlog.stdlib.add_logger_name,
+        structlog.stdlib.add_log_level,
+        structlog.processors.TimeStamper(fmt="iso"),
+    ],
 }
-LOGGING["loggers"][""] = {
-    "handlers": ["console", "file_app", "file_error", "file_json", "file_security"],
-    "level": "INFO",
-    "propagate": False,
-}
-LOGGING["loggers"]["apps"]["level"] = "INFO"
-LOGGING["loggers"]["django"]["level"] = "ERROR"
+
+LOGGING["handlers"]["console"]["formatter"] = "json_console"
+
+LOGGING["handlers"].pop("file", None)
+LOGGING["root"]["handlers"] = ["console"]

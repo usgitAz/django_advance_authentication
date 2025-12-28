@@ -13,6 +13,9 @@ services:
       - DB_USER=test_user
       - DB_PASSWORD=test_pass
       - DB_PORT=5432
+      - SITE_URL=127.0.0.1:8000
+      - DEFAULT_FROM_EMAIL="noreply@mydomain.com"
+
     command: sh -c "python src/manage.py migrate --noinput && pytest"
 
     depends_on:
